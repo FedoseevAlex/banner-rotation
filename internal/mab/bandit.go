@@ -7,22 +7,11 @@ import (
 )
 
 type BannerData struct {
-	ID          uuid.UUID
-	GroupID     uuid.UUID
-	SlotID      uuid.UUID
-	Shows       int
-	Clicks      int
-	Description string
-}
-
-type UserGroup struct {
-	ID          uuid.UUID
-	Description string
-}
-
-type Slot struct {
-	ID          uuid.UUID
-	Description string
+	ID      uuid.UUID
+	GroupID uuid.UUID
+	SlotID  uuid.UUID
+	Shows   int
+	Clicks  int
 }
 
 func UCB1(banners []*BannerData, trials int) *BannerData {
@@ -31,18 +20,9 @@ func UCB1(banners []*BannerData, trials int) *BannerData {
 		bannerToShow  *BannerData
 	)
 
-	if trials == 0 {
-		trials = 1
-	}
-
 	for _, banner := range banners {
-		shows := banner.Shows
-		if shows == 0 {
-			shows = 1
-		}
-
-		meanClicks := float64(banner.Clicks) / float64(shows)
-		confidence := meanClicks + math.Sqrt(2*math.Log(float64(trials))/float64(shows))
+		meanClicks := float64(banner.Clicks) / float64(banner.Shows+1)
+		confidence := meanClicks + math.Sqrt(2*math.Log(float64(trials+1))/float64(banner.Shows+1))
 		if confidence >= maxConfidence {
 			maxConfidence = confidence
 			bannerToShow = banner
