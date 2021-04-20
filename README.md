@@ -1,3 +1,7 @@
+![tests](https://github.com/FedoseevAlex/banner-rotation/actions/workflows/tests.yml/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/FedoseevAlex/banner-rotation)](https://goreportcard.com/report/github.com/FedoseevAlex/banner-rotation)
+--------------
+
 # banner-rotation
 This is a final project for course OTUS Golang Professional
 
