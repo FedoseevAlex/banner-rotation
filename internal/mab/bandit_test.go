@@ -34,4 +34,33 @@ func TestUCB1(t *testing.T) {
 
 		require.NotContains(t, allShows, 0)
 	})
+
+	t.Run("check popular banner have maximum shows", func(t *testing.T) {
+		// Add "popular" banner
+		popularID := uuid.New()
+		banners = append(banners, &BannerData{
+			ID:      popularID,
+			GroupID: uuid.New(),
+			SlotID:  uuid.New(),
+			Clicks:  10,
+		})
+
+		for i := 0; i < 100; i++ {
+			UCB1(banners, i)
+		}
+
+		// Find most displayed banner
+		var (
+			maxShows      int
+			popularBanner *BannerData
+		)
+		for _, banner := range banners {
+			if banner.Shows > maxShows {
+				popularBanner = banner
+			}
+		}
+
+		require.Equal(t, popularID, popularBanner.ID)
+	})
+
 }
