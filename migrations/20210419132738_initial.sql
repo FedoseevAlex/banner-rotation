@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS groups (
 );
 
 CREATE TABLE IF NOT EXISTS rotations (
-    banner_id UUID ,
+    banner_id UUID,
     slot_id   UUID,
     group_id  UUID,
     shows     INT,
@@ -27,17 +27,13 @@ CREATE TABLE IF NOT EXISTS rotations (
     FOREIGN KEY (group_id)  REFERENCES groups(id)  ON DELETE CASCADE,
     PRIMARY KEY (banner_id, slot_id, group_id)
 );
-
-CREATE TABLE IF NOT EXISTS total_shows (
-    count BIGINT
-)
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF NOT EXISTS total_shows;
-DROP TABLE IF NOT EXISTS rotations;
-DROP TABLE IF NOT EXISTS banners;
-DROP TABLE IF NOT EXISTS slots;
-DROP TABLE IF NOT EXISTS groups;
+DROP TABLE IF EXISTS total_shows;
+DROP TABLE IF EXISTS rotations;
+DROP TABLE IF EXISTS banners;
+DROP TABLE IF EXISTS slots;
+DROP TABLE IF EXISTS groups;
 -- +goose StatementEnd
