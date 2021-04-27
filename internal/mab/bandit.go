@@ -29,6 +29,6 @@ func UCB1(banners []*BannerData, trials int) *BannerData {
 		}
 	}
 
-	bannerToShow.Shows += 1
+	bannerToShow.Shows++
 	return bannerToShow
 }

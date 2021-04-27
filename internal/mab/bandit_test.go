@@ -8,7 +8,7 @@ import (
 )
 
 func TestUCB1(t *testing.T) {
-	var testBannersNum = 10
+	testBannersNum := 10
 	banners := make([]*BannerData, 0, testBannersNum)
 
 	for i := 0; i < testBannersNum; i++ {
@@ -62,5 +62,4 @@ func TestUCB1(t *testing.T) {
 
 		require.Equal(t, popularID, popularBanner.ID)
 	})
-
 }

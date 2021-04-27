@@ -51,7 +51,6 @@ func TestDatabase(t *testing.T) {
 		dbGroup, err := store.GetGroup(ctx, group.ID)
 		require.NoError(t, err)
 		require.Equal(t, group, dbGroup)
-
 	})
 
 	t.Run("check create rotation", func(t *testing.T) {
@@ -93,5 +92,4 @@ func TestDatabase(t *testing.T) {
 		_, err = store.GetRotation(ctx, banner.ID, slot.ID, group.ID)
 		require.ErrorIs(t, err, sql.ErrNoRows)
 	})
-
 }
