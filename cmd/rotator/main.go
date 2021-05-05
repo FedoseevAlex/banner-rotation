@@ -1,5 +1,7 @@
 package main
 
+import "os"
+
 func main() {
-	printVersion()
+	printVersion(os.Stdout)
 }
