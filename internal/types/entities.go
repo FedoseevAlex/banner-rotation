@@ -54,3 +54,7 @@ type Logger interface {
 	Error(msg string, args ...map[string]interface{})
 	Trace(msg string, args ...map[string]interface{})
 }
+
+type Rotator interface {
+	Rotate() Rotation
+}

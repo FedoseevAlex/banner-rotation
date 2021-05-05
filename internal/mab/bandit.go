@@ -3,32 +3,32 @@ package mab
 import (
 	"math"
 
-	"github.com/google/uuid"
+	"github.com/FedoseevAlex/banner-rotation/internal/types"
 )
 
-type BannerData struct {
-	ID      uuid.UUID
-	GroupID uuid.UUID
-	SlotID  uuid.UUID
-	Shows   int
-	Clicks  int
+type MultiArmedBandit struct {
+	BannersDatas []types.Rotation
+	Trials       int
 }
 
-func UCB1(banners []*BannerData, trials int) *BannerData {
+func (mab MultiArmedBandit) Rotate() (rotation types.Rotation) {
+	return UCB1(mab.BannersDatas, mab.Trials)
+}
+
+func UCB1(rotations []types.Rotation, trials int) types.Rotation {
 	var (
-		maxConfidence float64
-		bannerToShow  *BannerData
+		maxConfidence  float64
+		rotationToShow types.Rotation
 	)
 
-	for _, banner := range banners {
-		meanClicks := float64(banner.Clicks) / float64(banner.Shows+1)
-		confidence := meanClicks + math.Sqrt(2*math.Log(float64(trials+1))/float64(banner.Shows+1))
+	for _, rotation := range rotations {
+		meanClicks := float64(rotation.Clicks) / float64(rotation.Shows+1)
+		confidence := meanClicks + math.Sqrt(2*math.Log(float64(trials+1))/float64(rotation.Shows+1))
 		if confidence >= maxConfidence {
 			maxConfidence = confidence
-			bannerToShow = banner
+			rotationToShow = rotation
 		}
 	}
 
-	bannerToShow.Shows++
-	return bannerToShow
+	return rotationToShow
 }
