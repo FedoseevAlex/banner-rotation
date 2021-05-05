@@ -26,4 +26,18 @@ This is a final project for course OTUS Golang Professional
 - [ ] Наличие валидных Dockerfile и Makefile для сервиса. Проект возможно собрать чере make build, запустить через make run и протестировать через make test - 1 балл.
 - [ ] Понятность и чистота кода - до 3 баллов.
 
+
+## Замечания после первой проверки
+На данный момент набрано 5 баллов
+
+- [x] Оформить дз как pull-request из develop в master.
+- [ ] Файл должен называться main https://github.com/FedoseevAlex/banner-rotation/blob/main/cmd/rotator/rotator.go
+- [ ] Можно передавать в функцию io.Writer, чтобы потом эта функция могла работать и как api ручка, и как обычный принт. https://github.com/FedoseevAlex/banner-rotation/blob/main/cmd/rotator/version.go#L15
+- [ ] Структуры, на которые мапятся строки из бд лучше вынести в отдельный файл models https://github.com/FedoseevAlex/banner-rotation/blob/main/internal/storage/database.go#L23
+- [ ] Лучше объявить пакет с доменными структурами, которые не зависят ни от кого, и от которых зависят все. Тогда методы стореджа будут возвращать не модели, а именно доменные структуры, и можно будет определить интерфейс без привязки к реализации. https://github.com/FedoseevAlex/banner-rotation/blob/main/internal/storage/database.go#L55
+- [ ] Если я правильно понял, таблица rotations - это статистика. Тогда стоит убрать клики и показы из неё, сделать просто тип события (click, view) и Добавить timestamp события.
+
+Довольно много доработок ещё нужно сделать, если есть какие-то вопросы, задавайте мне в слак, так будет быстрее)
+Пока оценка 5 баллов.
+
 Максимум 15 баллов, зачет от 10.
