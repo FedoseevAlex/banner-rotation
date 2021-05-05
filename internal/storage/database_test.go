@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/FedoseevAlex/banner-rotation/internal/types"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
@@ -26,9 +27,9 @@ func TestDatabase(t *testing.T) {
 	err := store.Connect(ctx)
 	require.NoError(t, err)
 
-	banner := Banner{ID: uuid.New(), Description: "Some banner"}
-	slot := Slot{ID: uuid.New(), Description: "Main slot"}
-	group := Group{ID: uuid.New(), Description: "Teenagers"}
+	banner := types.Banner{ID: uuid.New(), Description: "Some banner"}
+	slot := types.Slot{ID: uuid.New(), Description: "Main slot"}
+	group := types.Group{ID: uuid.New(), Description: "Teenagers"}
 
 	t.Run("check create banner slot and group", func(t *testing.T) {
 		err := store.AddBanner(ctx, banner)
@@ -59,7 +60,7 @@ func TestDatabase(t *testing.T) {
 
 		dbRotation, err := store.GetRotation(ctx, banner.ID, slot.ID, group.ID)
 		require.NoError(t, err)
-		require.Equal(t, Rotation{BannerID: banner.ID, SlotID: slot.ID, GroupID: group.ID}, dbRotation)
+		require.Equal(t, types.Rotation{BannerID: banner.ID, SlotID: slot.ID, GroupID: group.ID}, dbRotation)
 	})
 
 	t.Run("check total shows", func(t *testing.T) {
@@ -84,7 +85,7 @@ func TestDatabase(t *testing.T) {
 
 		dbRotation, err := store.GetRotation(ctx, banner.ID, slot.ID, group.ID)
 		require.NoError(t, err)
-		require.Equal(t, Rotation{BannerID: banner.ID, SlotID: slot.ID, GroupID: group.ID}, dbRotation)
+		require.Equal(t, types.Rotation{BannerID: banner.ID, SlotID: slot.ID, GroupID: group.ID}, dbRotation)
 
 		err = store.DeleteBanner(ctx, banner.ID)
 		require.NoError(t, err)

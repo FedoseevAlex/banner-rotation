@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/FedoseevAlex/banner-rotation/internal/types"
 	"github.com/google/uuid"
 
 	// Posgresql driver.
@@ -20,29 +21,6 @@ func New(connStr string) *Storage {
 	return &Storage{connStr: connStr}
 }
 
-type Banner struct {
-	ID          uuid.UUID
-	Description string
-}
-
-type Slot struct {
-	ID          uuid.UUID
-	Description string
-}
-
-type Group struct {
-	ID          uuid.UUID
-	Description string
-}
-
-type Rotation struct {
-	BannerID uuid.UUID `db:"banner_id"`
-	SlotID   uuid.UUID `db:"slot_id"`
-	GroupID  uuid.UUID `db:"group_id"`
-	Shows    int
-	Clicks   int
-}
-
 func (s *Storage) Connect(ctx context.Context) (err error) {
 	s.db, err = sqlx.ConnectContext(ctx, "pgx", s.connStr)
 	return
@@ -52,30 +30,31 @@ func (s *Storage) Close(ctx context.Context) error {
 	return s.db.Close()
 }
 
-func (s *Storage) AddBanner(ctx context.Context, banner Banner) error {
+func (s *Storage) AddBanner(ctx context.Context, bannerInfo types.Banner) error {
 	insertBannerQuery := `
 	INSERT INTO banners (id, description) VALUES (:id, :description);
 	`
-	_, err := s.db.NamedExecContext(ctx, insertBannerQuery, banner)
+	dbBanner := banner(bannerInfo)
+	_, err := s.db.NamedExecContext(ctx, insertBannerQuery, dbBanner)
 	return err
 }
 
-func (s *Storage) GetBanner(ctx context.Context, bannerID uuid.UUID) (Banner, error) {
-	var banner Banner
+func (s *Storage) GetBanner(ctx context.Context, bannerID uuid.UUID) (types.Banner, error) {
 	query := `
 	SELECT * FROM banners WHERE id=$1
 	`
 	row := s.db.QueryRowxContext(ctx, query, bannerID)
 	if row.Err() != nil {
-		return banner, row.Err()
+		return types.Banner{}, row.Err()
 	}
 
-	err := row.StructScan(&banner)
+	var dbBanner banner
+	err := row.StructScan(&dbBanner)
 	if err != nil {
-		return banner, err
+		return types.Banner{}, err
 	}
 
-	return banner, nil
+	return types.Banner(dbBanner), nil
 }
 
 func (s *Storage) DeleteBanner(ctx context.Context, bannerID uuid.UUID) error {
@@ -86,56 +65,58 @@ func (s *Storage) DeleteBanner(ctx context.Context, bannerID uuid.UUID) error {
 	return err
 }
 
-func (s *Storage) AddSlot(ctx context.Context, slot Slot) error {
+func (s *Storage) AddSlot(ctx context.Context, slotInfo types.Slot) error {
 	insertSlotQuery := `
 	INSERT INTO slots (id, description) VALUES (:id, :description);
 	`
-	_, err := s.db.NamedExecContext(ctx, insertSlotQuery, slot)
+	dbSlot := slot(slotInfo)
+	_, err := s.db.NamedExecContext(ctx, insertSlotQuery, dbSlot)
 	return err
 }
 
-func (s *Storage) GetSlot(ctx context.Context, slotID uuid.UUID) (Slot, error) {
-	var slot Slot
+func (s *Storage) GetSlot(ctx context.Context, slotID uuid.UUID) (types.Slot, error) {
 	query := `
 	SELECT * FROM slots WHERE id=$1
 	`
 	row := s.db.QueryRowxContext(ctx, query, slotID)
 	if row.Err() != nil {
-		return slot, row.Err()
+		return types.Slot{}, row.Err()
 	}
 
-	err := row.StructScan(&slot)
+	var dbSlot slot
+	err := row.StructScan(&dbSlot)
 	if err != nil {
-		return slot, err
+		return types.Slot{}, err
 	}
 
-	return slot, nil
+	return types.Slot(dbSlot), nil
 }
 
-func (s *Storage) AddGroup(ctx context.Context, group Group) error {
+func (s *Storage) AddGroup(ctx context.Context, groupInfo types.Group) error {
 	insertGroupQuery := `
 	INSERT INTO groups (id, description) VALUES (:id, :description);
 	`
-	_, err := s.db.NamedExecContext(ctx, insertGroupQuery, group)
+	dbGroup := group(groupInfo)
+	_, err := s.db.NamedExecContext(ctx, insertGroupQuery, dbGroup)
 	return err
 }
 
-func (s *Storage) GetGroup(ctx context.Context, groupID uuid.UUID) (Group, error) {
-	var group Group
+func (s *Storage) GetGroup(ctx context.Context, groupID uuid.UUID) (types.Group, error) {
 	query := `
 	SELECT * FROM groups WHERE id=$1
 	`
 	row := s.db.QueryRowxContext(ctx, query, groupID)
 	if row.Err() != nil {
-		return group, row.Err()
+		return types.Group{}, row.Err()
 	}
 
-	err := row.StructScan(&group)
+	var dbGroup group
+	err := row.StructScan(&dbGroup)
 	if err != nil {
-		return group, err
+		return types.Group{}, err
 	}
 
-	return group, nil
+	return types.Group(dbGroup), nil
 }
 
 func (s *Storage) AddRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error {
@@ -143,7 +124,7 @@ func (s *Storage) AddRotation(ctx context.Context, bannerID, slotID, groupID uui
 	INSERT INTO rotations (banner_id, slot_id, group_id, shows, clicks)
 	VALUES (:banner_id, :slot_id, :group_id, :shows, :clicks);
 	`
-	rotation := Rotation{
+	rotation := rotation{
 		BannerID: bannerID,
 		SlotID:   slotID,
 		GroupID:  groupID,
@@ -160,19 +141,22 @@ func (s *Storage) DeleteRotation(ctx context.Context, bannerID, slotID, groupID 
 	return err
 }
 
-func (s *Storage) GetRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (Rotation, error) {
-	var rotation Rotation
-
+func (s *Storage) GetRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (types.Rotation, error) {
 	selectRotationQuery := `
 	SELECT * FROM rotations WHERE banner_id=$1 AND slot_id=$2 AND group_id=$3
 	`
 	row := s.db.QueryRowxContext(ctx, selectRotationQuery, bannerID, slotID, groupID)
 	if row.Err() != nil {
-		return rotation, row.Err()
+		return types.Rotation{}, row.Err()
 	}
 
+	var rotation rotation
 	err := row.StructScan(&rotation)
-	return rotation, err
+	if err != nil {
+		return types.Rotation{}, err
+	}
+
+	return types.Rotation(rotation), nil
 }
 
 func (s *Storage) AddShow(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error {
