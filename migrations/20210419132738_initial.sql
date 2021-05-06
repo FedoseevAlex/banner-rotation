@@ -2,17 +2,23 @@
 -- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS banners (
     id          UUID PRIMARY KEY,
-    description TEXT
+    description TEXT,
+    deleted BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS slots (
     id          UUID PRIMARY KEY,
-    description TEXT
+    description TEXT,
+    deleted BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS groups (
     id          UUID PRIMARY KEY,
-    description TEXT
+    description TEXT,
+    deleted BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS rotations (
@@ -21,10 +27,12 @@ CREATE TABLE IF NOT EXISTS rotations (
     group_id  UUID,
     shows     INT,
     clicks    INT,
+    deleted BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMP,
 
-    FOREIGN KEY (banner_id) REFERENCES banners(id) ON DELETE CASCADE,
-    FOREIGN KEY (slot_id)   REFERENCES slots(id)   ON DELETE CASCADE,
-    FOREIGN KEY (group_id)  REFERENCES groups(id)  ON DELETE CASCADE,
+    FOREIGN KEY (banner_id) REFERENCES banners(id),
+    FOREIGN KEY (slot_id)   REFERENCES slots(id),
+    FOREIGN KEY (group_id)  REFERENCES groups(id),
     PRIMARY KEY (banner_id, slot_id, group_id)
 );
 -- +goose StatementEnd
