@@ -8,14 +8,19 @@ import (
 
 type MultiArmedBandit struct {
 	BannersDatas []types.Rotation
-	Trials       int
+	Trials       int64
 }
 
-func (mab MultiArmedBandit) Rotate() (rotation types.Rotation) {
+func (mab *MultiArmedBandit) Rotate() (rotation types.Rotation) {
 	return UCB1(mab.BannersDatas, mab.Trials)
 }
 
-func UCB1(rotations []types.Rotation, trials int) types.Rotation {
+func (mab *MultiArmedBandit) Load(rotations []types.Rotation, trials int64) {
+	mab.Trials = trials
+	mab.BannersDatas = rotations
+}
+
+func UCB1(rotations []types.Rotation, trials int64) types.Rotation {
 	var (
 		maxConfidence  float64
 		rotationToShow types.Rotation

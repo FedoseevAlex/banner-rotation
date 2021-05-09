@@ -62,4 +62,24 @@ type Logger interface {
 
 type Rotator interface {
 	Rotate() Rotation
+	Load(rotations []Rotation, trials int64)
+}
+
+type Application interface {
+	AddBanner(ctx context.Context, description string) (Banner, error)
+	DeleteBanner(ctx context.Context, bannerID uuid.UUID) error
+	GetBanner(ctx context.Context, bannerID uuid.UUID) (Banner, error)
+
+	AddSlot(ctx context.Context, description string) (Slot, error)
+	DeleteSlot(ctx context.Context, slotID uuid.UUID) error
+	GetSlot(ctx context.Context, slotID uuid.UUID) (Slot, error)
+
+	AddGroup(ctx context.Context, description string) (Group, error)
+	DeleteGroup(ctx context.Context, groupID uuid.UUID) error
+	GetGroup(ctx context.Context, groupID uuid.UUID) (Group, error)
+
+	RegisterClick(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
+	ChooseBanner(ctx context.Context, slotID, groupID uuid.UUID) (Rotation, error)
+
+	GetLogger(name string) Logger
 }
