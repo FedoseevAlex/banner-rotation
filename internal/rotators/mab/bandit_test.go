@@ -26,7 +26,7 @@ func TestUCB1(t *testing.T) {
 		rotationsShows := make(map[types.Rotation]int)
 
 		for i := 0; i < 100; i++ {
-			rotation := UCB1(rotations, i)
+			rotation := UCB1(rotations, int64(i))
 			rotationsShows[rotation]++
 		}
 
@@ -50,7 +50,7 @@ func TestUCB1(t *testing.T) {
 
 		rotationsShows := make(map[types.Rotation]int)
 		for i := 0; i < 100; i++ {
-			rotation := UCB1(rotations, i)
+			rotation := UCB1(rotations, int64(i))
 			rotationsShows[rotation]++
 		}
 
