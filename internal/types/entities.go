@@ -55,15 +55,17 @@ type Storager interface {
 	GetTotalShows(ctx context.Context) (totalShows int64, err error)
 }
 
-type LogFields map[string]interface{}
-type Logger interface {
-	Debug(msg string, fields LogFields)
-	Info(msg string, fields LogFields)
-	Warn(msg string, fields LogFields)
-	Error(msg string, fields LogFields)
-	Trace(msg string, fields LogFields)
-	ChildLogger(name string) Logger
-}
+type (
+	LogFields map[string]interface{}
+	Logger    interface {
+		Debug(msg string, fields LogFields)
+		Info(msg string, fields LogFields)
+		Warn(msg string, fields LogFields)
+		Error(msg string, fields LogFields)
+		Trace(msg string, fields LogFields)
+		ChildLogger(name string) Logger
+	}
+)
 
 type Rotator interface {
 	Rotate() Rotation

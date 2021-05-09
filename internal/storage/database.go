@@ -389,6 +389,7 @@ func (s *Storage) GetAllRotations(ctx context.Context) ([]types.Rotation, error)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	if rows.Err() != nil {
 		return nil, rows.Err()
