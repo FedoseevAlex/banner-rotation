@@ -42,6 +42,18 @@ func execTxQuery(tx *sql.Tx, query string, args ...interface{}) error {
 	return nil
 }
 
+// This method is to be used for tests only.
+func (s *Storage) CleanDB() {
+	cleanRotations := `DELETE FROM rotations`
+	s.db.Exec(cleanRotations)
+	cleanBanners := `DELETE FROM banners`
+	s.db.Exec(cleanBanners)
+	cleanSlots := `DELETE FROM slots`
+	s.db.Exec(cleanSlots)
+	cleanGroups := `DELETE FROM groups`
+	s.db.Exec(cleanGroups)
+}
+
 // Storager implementation.
 func (s *Storage) Connect(ctx context.Context) (err error) {
 	s.db, err = sqlx.ConnectContext(ctx, "pgx", s.connStr)
@@ -368,6 +380,42 @@ func (s *Storage) AddClick(ctx context.Context, bannerID, slotID, groupID uuid.U
 	}
 
 	return nil
+}
+
+func (s *Storage) GetAllRotations(ctx context.Context) ([]types.Rotation, error) {
+	query := `SELECT * FROM rotations WHERE deleted=FALSE`
+
+	rows, err := s.db.QueryxContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	var rotations []types.Rotation
+	for rows.Next() {
+		var r rotation
+
+		err := rows.StructScan(&r)
+		if err != nil {
+			return nil, err
+		}
+
+		rotations = append(
+			rotations,
+			types.Rotation{
+				BannerID: r.BannerID,
+				SlotID:   r.SlotID,
+				GroupID:  r.GroupID,
+				Shows:    r.Shows,
+				Clicks:   r.Clicks,
+			},
+		)
+	}
+
+	return rotations, nil
 }
 
 func (s *Storage) GetTotalShows(ctx context.Context) (int64, error) {

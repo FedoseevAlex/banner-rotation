@@ -39,15 +39,18 @@ type Storager interface {
 	// Slot operations
 	AddSlot(ctx context.Context, slot Slot) error
 	GetSlot(ctx context.Context, slotID uuid.UUID) (Slot, error)
+	DeleteSlot(ctx context.Context, slotID uuid.UUID) error
 	// Group operations
 	AddGroup(ctx context.Context, group Group) error
 	GetGroup(ctx context.Context, groupID uuid.UUID) (Group, error)
+	DeleteGroup(ctx context.Context, groupID uuid.UUID) error
 	// Rotation operations
 	AddRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
 	DeleteRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
 	GetRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (Rotation, error)
 	AddShow(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
 	AddClick(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
+	GetAllRotations(ctx context.Context) ([]Rotation, error)
 	// Get total amount of shows
 	GetTotalShows(ctx context.Context) (totalShows int64, err error)
 }

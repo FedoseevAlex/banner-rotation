@@ -29,6 +29,7 @@ func TestBanners(t *testing.T) {
 	if connectionString == "" {
 		t.Skipf("Skipping TestBanners as env var '%s' is not set", dbConnEnvVar)
 	}
+	defer store.CleanDB()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -60,6 +61,7 @@ func TestSlots(t *testing.T) {
 	if connectionString == "" {
 		t.Skipf("Skipping TestSlots as env var '%s' is not set", dbConnEnvVar)
 	}
+	defer store.CleanDB()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -91,6 +93,7 @@ func TestGroups(t *testing.T) {
 	if connectionString == "" {
 		t.Skipf("Skipping TestGroups as env var '%s' is not set", dbConnEnvVar)
 	}
+	defer store.CleanDB()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -134,8 +137,9 @@ func createTestRotation(ctx context.Context, t *testing.T, r testRotationInfo) {
 
 func TestRotations(t *testing.T) {
 	if connectionString == "" {
-		t.Skipf("Skipping database tests as env var '%s' is not set", dbConnEnvVar)
+		t.Skipf("Skipping TestRotations as env var '%s' is not set", dbConnEnvVar)
 	}
+	defer store.CleanDB()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -166,6 +170,16 @@ func TestRotations(t *testing.T) {
 		}
 	})
 
+	t.Run("check get all rotations", func(t *testing.T) {
+		var (
+			rs  []types.Rotation
+			err error
+		)
+		rs, err = store.GetAllRotations(ctx)
+		require.NoError(t, err)
+		require.Len(t, rs, 2)
+	})
+
 	t.Run("check total shows", func(t *testing.T) {
 		testShows := 10
 		for _, r := range rotations {
@@ -184,12 +198,6 @@ func TestRotations(t *testing.T) {
 		r := rotations[0]
 		err := store.DeleteRotation(ctx, r.banner.ID, r.slot.ID, r.group.ID)
 		require.NoError(t, err)
-	})
-
-	t.Run("check total shows with deleted rotations", func(t *testing.T) {
-		shows, err := store.GetTotalShows(ctx)
-		require.NoError(t, err)
-		require.Equal(t, int64(10), shows)
 	})
 
 	t.Run("check total shows with deleted rotations", func(t *testing.T) {
