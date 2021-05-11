@@ -13,9 +13,10 @@ import (
 
 func New(config config.Config) *App {
 	log := logger.New(config.Log.Level, config.Log.File)
+
 	store := storage.New(config.Storage.DBConnectionString)
-	// TODO: УБРАТЬ ЭТО И ПЕРЕДЕЛАТЬ НОРМАЛЬНО
-	store.Connect(context.Background())
+	store.Connect()
+
 	rotator := &mab.MultiArmedBandit{}
 	return &App{Rotator: rotator, Storage: store, Log: log}
 }

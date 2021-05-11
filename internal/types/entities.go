@@ -30,8 +30,8 @@ type Rotation struct {
 }
 
 type Storager interface {
-	Connect(ctx context.Context) (err error)
-	Close(ctx context.Context) error
+	Connect() error
+	Close() error
 	// Banner operations
 	AddBanner(ctx context.Context, banner Banner) error
 	GetBanner(ctx context.Context, bannerID uuid.UUID) (Banner, error)

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"log"
 	"net/http"
 	"time"
 
@@ -22,7 +21,6 @@ func (rw *responseWriterWrapper) WriteHeader(statusCode int) {
 func loggingMiddleware(next httprouter.Handle, logger types.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		wrappedResponseWriter := &responseWriterWrapper{ResponseWriter: w, status: http.StatusOK}
-		log.Println("wrappedResponseWriter ", wrappedResponseWriter)
 
 		begin := time.Now()
 		next(wrappedResponseWriter, r, params)

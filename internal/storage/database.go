@@ -55,12 +55,12 @@ func (s *Storage) CleanDB() {
 }
 
 // Storager implementation.
-func (s *Storage) Connect(ctx context.Context) (err error) {
-	s.db, err = sqlx.ConnectContext(ctx, "pgx", s.connStr)
+func (s *Storage) Connect() (err error) {
+	s.db, err = sqlx.Connect("pgx", s.connStr)
 	return
 }
 
-func (s *Storage) Close(ctx context.Context) error {
+func (s *Storage) Close() error {
 	return s.db.Close()
 }
 

@@ -34,8 +34,9 @@ func TestBanners(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := store.Connect(ctx)
+	err := store.Connect()
 	require.NoError(t, err)
+	defer store.Close()
 
 	banner := types.Banner{ID: uuid.New(), Description: "Some banner"}
 
@@ -66,8 +67,9 @@ func TestSlots(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := store.Connect(ctx)
+	err := store.Connect()
 	require.NoError(t, err)
+	defer store.Close()
 
 	slot := types.Slot{ID: uuid.New(), Description: "Main slot"}
 
@@ -98,8 +100,9 @@ func TestGroups(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := store.Connect(ctx)
+	err := store.Connect()
 	require.NoError(t, err)
+	defer store.Close()
 
 	group := types.Group{ID: uuid.New(), Description: "Teenagers"}
 
@@ -144,8 +147,9 @@ func TestRotations(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err := store.Connect(ctx)
+	err := store.Connect()
 	require.NoError(t, err)
+	defer store.Close()
 
 	rotations := []testRotationInfo{
 		{

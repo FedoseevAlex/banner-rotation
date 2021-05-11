@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/FedoseevAlex/banner-rotation/internal/common"
 	"github.com/FedoseevAlex/banner-rotation/internal/config"
 	"github.com/FedoseevAlex/banner-rotation/internal/types"
 	"github.com/google/uuid"
@@ -58,6 +59,7 @@ func NewServer(application types.Application, cfg config.Server) (*Server, error
 		server.chooseBannerHandler,
 		requestLogger,
 	))
+	mux.Handle("GET", "/version", server.versionHandler)
 
 	return server, nil
 }
@@ -74,6 +76,14 @@ func jsonResponse(w http.ResponseWriter, code int, body interface{}) {
 
 	_, err = w.Write(bodyBytes)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (s *Server) versionHandler(w http.ResponseWriter, request *http.Request, _ httprouter.Params) {
+	w.Header().Add("Content-type", "application/json")
+	if err := common.PrintVersion(w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
