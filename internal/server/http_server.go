@@ -65,6 +65,19 @@ func NewServer(application types.Application, cfg config.Server) (*Server, error
 		requestLogger,
 	))
 
+	mux.Handle("POST", "/groups", loggingMiddleware(
+		server.addGroupHandler,
+		requestLogger,
+	))
+	mux.Handle("DELETE", "/groups/:group_id", loggingMiddleware(
+		server.deleteGroupHandler,
+		requestLogger,
+	))
+	mux.Handle("GET", "/groups/:group_id", loggingMiddleware(
+		server.getGroupHandler,
+		requestLogger,
+	))
+
 	mux.Handle("POST", "/group/:group_id/slots/:slot_id/banners/:banner_id/click", loggingMiddleware(
 		server.registerClickHandler,
 		requestLogger,
@@ -265,6 +278,86 @@ func (s *Server) getSlotHandler(w http.ResponseWriter, request *http.Request, pa
 	}
 
 	jsonResponse(w, http.StatusOK, slot)
+}
+
+// Group handlers.
+func (s *Server) addGroupHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	body := DescriptionBody{}
+	err := json.NewDecoder(request.Body).Decode(&body)
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to decode request body",
+			},
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(request.Context(), s.timeout)
+	defer cancel()
+
+	group, err := s.app.AddGroup(ctx, body.Description)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, group)
+}
+
+func (s *Server) deleteGroupHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	groupID, err := uuid.Parse(params.ByName("group_id"))
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to parse group uuid",
+			},
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(request.Context(), s.timeout)
+	defer cancel()
+
+	err = s.app.DeleteGroup(ctx, groupID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse(w, http.StatusNoContent, nil)
+}
+
+func (s *Server) getGroupHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	groupID, err := uuid.Parse(params.ByName("group_id"))
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to parse group uuid",
+			},
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(request.Context(), s.timeout)
+	defer cancel()
+
+	group, err := s.app.GetGroup(ctx, groupID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, group)
 }
 
 func (s *Server) registerClickHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
