@@ -51,6 +51,20 @@ func NewServer(application types.Application, cfg config.Server) (*Server, error
 		server.getBannerHandler,
 		requestLogger,
 	))
+
+	mux.Handle("POST", "/slots", loggingMiddleware(
+		server.addSlotHandler,
+		requestLogger,
+	))
+	mux.Handle("DELETE", "/slots/:slot_id", loggingMiddleware(
+		server.deleteSlotHandler,
+		requestLogger,
+	))
+	mux.Handle("GET", "/slots/:slot_id", loggingMiddleware(
+		server.getSlotHandler,
+		requestLogger,
+	))
+
 	mux.Handle("POST", "/group/:group_id/slots/:slot_id/banners/:banner_id/click", loggingMiddleware(
 		server.registerClickHandler,
 		requestLogger,
@@ -93,6 +107,7 @@ func (s *Server) versionHandler(w http.ResponseWriter, request *http.Request, _ 
 	}
 }
 
+// Banner handlers.
 func (s *Server) addBannerHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	body := DescriptionBody{}
 	err := json.NewDecoder(request.Body).Decode(&body)
@@ -170,6 +185,86 @@ func (s *Server) getBannerHandler(w http.ResponseWriter, request *http.Request, 
 	}
 
 	jsonResponse(w, http.StatusOK, banner)
+}
+
+// Slot handlers.
+func (s *Server) addSlotHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	body := DescriptionBody{}
+	err := json.NewDecoder(request.Body).Decode(&body)
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to decode request body",
+			},
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(request.Context(), s.timeout)
+	defer cancel()
+
+	slot, err := s.app.AddSlot(ctx, body.Description)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, slot)
+}
+
+func (s *Server) deleteSlotHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	slotID, err := uuid.Parse(params.ByName("slot_id"))
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to parse slot uuid",
+			},
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(request.Context(), s.timeout)
+	defer cancel()
+
+	err = s.app.DeleteSlot(ctx, slotID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse(w, http.StatusNoContent, nil)
+}
+
+func (s *Server) getSlotHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	slotID, err := uuid.Parse(params.ByName("slot_id"))
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to parse slot uuid",
+			},
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(request.Context(), s.timeout)
+	defer cancel()
+
+	slot, err := s.app.GetSlot(ctx, slotID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, slot)
 }
 
 func (s *Server) registerClickHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
