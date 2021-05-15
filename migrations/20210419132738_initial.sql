@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS groups (
 );
 
 CREATE TABLE IF NOT EXISTS rotations (
+    id        SERIAL PRIMARY KEY,
     banner_id UUID,
     slot_id   UUID,
     group_id  UUID,
@@ -33,13 +34,22 @@ CREATE TABLE IF NOT EXISTS rotations (
     FOREIGN KEY (banner_id) REFERENCES banners(id),
     FOREIGN KEY (slot_id)   REFERENCES slots(id),
     FOREIGN KEY (group_id)  REFERENCES groups(id),
-    PRIMARY KEY (banner_id, slot_id, group_id)
+    UNIQUE(banner_id, slot_id, group_id)
+);
+
+CREATE TABLE IF NOT EXISTS events (
+    id SERIAL PRIMARY KEY,
+    rotation_id SERIAL,
+    stamp       TIMESTAMP,
+    event_type  TEXT,
+
+    FOREIGN KEY (rotation_id) REFERENCES rotations(id)
 );
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE IF EXISTS total_shows;
+DROP TABLE IF EXISTS event_timestamps;
 DROP TABLE IF EXISTS rotations;
 DROP TABLE IF EXISTS banners;
 DROP TABLE IF EXISTS slots;

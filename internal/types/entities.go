@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -22,11 +23,17 @@ type Group struct {
 }
 
 type Rotation struct {
-	BannerID uuid.UUID
-	SlotID   uuid.UUID
-	GroupID  uuid.UUID
-	Shows    int
-	Clicks   int
+	RotationID int
+	BannerID   uuid.UUID
+	SlotID     uuid.UUID
+	GroupID    uuid.UUID
+	Shows      int
+	Clicks     int
+}
+
+type Event struct {
+	Type      string
+	Timestamp time.Time
 }
 
 type Storager interface {
@@ -51,6 +58,7 @@ type Storager interface {
 	AddShow(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
 	AddClick(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
 	GetAllRotations(ctx context.Context) ([]Rotation, error)
+	GetRotationStats(ctx context.Context, bannerID, slotID, groupID uuid.UUID) ([]Event, error)
 	// Get total amount of shows
 	GetTotalShows(ctx context.Context) (totalShows int64, err error)
 }
@@ -86,6 +94,7 @@ type Application interface {
 	GetGroup(ctx context.Context, groupID uuid.UUID) (Group, error)
 
 	RegisterClick(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
+	GetStats(ctx context.Context, bannerID, slotID, groupID uuid.UUID) ([]Event, error)
 	ChooseBanner(ctx context.Context, slotID, groupID uuid.UUID) (Rotation, error)
 
 	GetLogger(name string) Logger

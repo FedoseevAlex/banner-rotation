@@ -11,14 +11,23 @@ import (
 	"github.com/google/uuid"
 )
 
-func New(config config.Config) *App {
+func New(config config.Config) (*App, error) {
 	log := logger.New(config.Log.Level, config.Log.File)
 
 	store := storage.New(config.Storage.DBConnectionString)
-	store.Connect()
+	err := store.Connect()
+	if err != nil {
+		log.Error(
+			"failed to connect to storage",
+			types.LogFields{
+				"error": err,
+			},
+		)
+		return nil, err
+	}
 
 	rotator := &mab.MultiArmedBandit{}
-	return &App{Rotator: rotator, Storage: store, Log: log}
+	return &App{Rotator: rotator, Storage: store, Log: log}, nil
 }
 
 type App struct {
@@ -284,6 +293,33 @@ func (a *App) ChooseBanner(ctx context.Context, slotID, groupID uuid.UUID) (type
 	)
 
 	return rotationToShow, nil
+}
+
+func (a *App) GetStats(ctx context.Context, bannerID, slotID, groupID uuid.UUID) ([]types.Event, error) {
+	a.Log.Debug(
+		"get statistics",
+		types.LogFields{
+			"banner_id": bannerID.String(),
+			"slot_id":   slotID.String(),
+			"group_id":  groupID.String(),
+		},
+	)
+
+	events, err := a.Storage.GetRotationStats(ctx, bannerID, slotID, groupID)
+	if err != nil {
+		a.Log.Error(
+			"failed to get rotation stats",
+			types.LogFields{
+				"error":     err,
+				"banner_id": bannerID.String(),
+				"slot_id":   slotID.String(),
+				"group_id":  groupID.String(),
+			},
+		)
+		return nil, err
+	}
+
+	return events, nil
 }
 
 func (a *App) GetLogger(name string) types.Logger {

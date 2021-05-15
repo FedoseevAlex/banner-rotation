@@ -13,6 +13,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	EventTypeClick string = "click"
+	EventTypeShow  string = "show"
+)
+
 type Storage struct {
 	db      *sqlx.DB
 	connStr string
@@ -43,15 +48,84 @@ func execTxQuery(tx *sql.Tx, query string, args ...interface{}) error {
 }
 
 // This method is to be used for tests only.
-func (s *Storage) CleanDB() {
+func (s *Storage) CleanDB() error {
+	cleanEventTimestamps := `DELETE FROM event_timestamps`
+	_, err := s.db.Exec(cleanEventTimestamps)
+	if err != nil {
+		return err
+	}
+
 	cleanRotations := `DELETE FROM rotations`
-	s.db.Exec(cleanRotations)
+	_, err = s.db.Exec(cleanRotations)
+	if err != nil {
+		return err
+	}
+
 	cleanBanners := `DELETE FROM banners`
-	s.db.Exec(cleanBanners)
+	_, err = s.db.Exec(cleanBanners)
+	if err != nil {
+		return err
+	}
+
 	cleanSlots := `DELETE FROM slots`
-	s.db.Exec(cleanSlots)
+	_, err = s.db.Exec(cleanSlots)
+	if err != nil {
+		return err
+	}
+
 	cleanGroups := `DELETE FROM groups`
-	s.db.Exec(cleanGroups)
+	_, err = s.db.Exec(cleanGroups)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) AddEventTimestamp(ctx context.Context, eventType string, rotationID int) error {
+	query := ` INSERT INTO event_timestamps (rotation_id, stamp, event_type)
+	VALUES (:rotation_id, now(), :event_type)
+	`
+	eventStamp := event{
+		RotationID: rotationID,
+		Type:       eventType,
+	}
+
+	res, err := s.db.NamedExecContext(ctx, query, eventStamp)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrNoRowWasAffected
+	}
+
+	return nil
+}
+
+func (s *Storage) GetRotationID(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (int, error) {
+	query := `
+	SELECT id FROM rotations
+	WHERE
+	banner_id=$1 AND slot_id=$2 AND group_id=$3 AND deleted=FALSE
+	`
+
+	row := s.db.QueryRowxContext(ctx, query, bannerID, slotID, groupID)
+	if row.Err() != nil {
+		return 0, row.Err()
+	}
+
+	var id int
+	err := row.Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
 
 // Storager implementation.
@@ -306,25 +380,24 @@ func (s *Storage) DeleteRotation(ctx context.Context, bannerID, slotID, groupID 
 }
 
 func (s *Storage) GetRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (types.Rotation, error) {
+	rotationID, err := s.GetRotationID(ctx, bannerID, slotID, groupID)
+	if err != nil {
+		return types.Rotation{}, err
+	}
+
 	selectRotationQuery := `
-	SELECT * FROM rotations
-	WHERE
-		banner_id=$1 AND
-		slot_id=$2 AND
-		group_id=$3 AND
-		deleted=FALSE
+	SELECT * FROM rotations WHERE id=$1 AND deleted=FALSE
 	`
-	row := s.db.QueryRowxContext(ctx, selectRotationQuery, bannerID, slotID, groupID)
+	row := s.db.QueryRowxContext(ctx, selectRotationQuery, rotationID)
 	if row.Err() != nil {
 		return types.Rotation{}, row.Err()
 	}
 
 	var dbRotation rotation
-	err := row.StructScan(&dbRotation)
+	err = row.StructScan(&dbRotation)
 	if err != nil {
 		return types.Rotation{}, err
 	}
-
 	resultRotation := types.Rotation{
 		BannerID: dbRotation.BannerID,
 		SlotID:   dbRotation.SlotID,
@@ -336,13 +409,54 @@ func (s *Storage) GetRotation(ctx context.Context, bannerID, slotID, groupID uui
 	return resultRotation, nil
 }
 
-func (s *Storage) AddShow(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error {
+func (s *Storage) GetRotationStats(ctx context.Context, bannerID, slotID, groupID uuid.UUID) ([]types.Event, error) {
 	query := `
-	UPDATE rotations SET shows=shows+1
-	WHERE
-	banner_id=$1 AND slot_id=$2 AND group_id=$3 AND deleted=FALSE
+	SELECT * FROM events WHERE rotation_id=$1
 	`
-	res, err := s.db.ExecContext(ctx, query, bannerID, slotID, groupID)
+	rotationID, err := s.GetRotationID(ctx, bannerID, slotID, groupID)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := s.db.QueryxContext(ctx, query, rotationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	var events []types.Event
+	for rows.Next() {
+		dbEvent := event{}
+		err := rows.Scan(&dbEvent)
+		if err != nil {
+			return nil, err
+		}
+
+		events = append(
+			events,
+			types.Event{
+				Type:      dbEvent.Type,
+				Timestamp: dbEvent.Timestamp,
+			},
+		)
+	}
+	return events, err
+}
+
+func (s *Storage) AddShow(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error {
+	rotationID, err := s.GetRotationID(ctx, bannerID, slotID, groupID)
+	if err != nil {
+		return err
+	}
+
+	query := `
+	UPDATE rotations SET shows=shows+1 WHERE id=$1
+	`
+	res, err := s.db.ExecContext(ctx, query, rotationID)
 	if err != nil {
 		return err
 	}
@@ -356,16 +470,21 @@ func (s *Storage) AddShow(ctx context.Context, bannerID, slotID, groupID uuid.UU
 		return errors.New("no rotation was updated")
 	}
 
+	err = s.AddEventTimestamp(ctx, EventTypeShow, rotationID)
+
 	return err
 }
 
 func (s *Storage) AddClick(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error {
+	rotationID, err := s.GetRotationID(ctx, bannerID, slotID, groupID)
+	if err != nil {
+		return err
+	}
+
 	query := `
-	UPDATE rotations SET clicks=clicks+1
-	WHERE
-	banner_id=$1 AND slot_id=$2 AND group_id=$3 AND deleted=FALSE
+	UPDATE rotations SET clicks=clicks+1 WHERE id=$1
 	`
-	res, err := s.db.ExecContext(ctx, query, bannerID, slotID, groupID)
+	res, err := s.db.ExecContext(ctx, query, rotationID)
 	if err != nil {
 		return err
 	}
@@ -379,7 +498,9 @@ func (s *Storage) AddClick(ctx context.Context, bannerID, slotID, groupID uuid.U
 		return errors.New("no row was updated")
 	}
 
-	return nil
+	err = s.AddEventTimestamp(ctx, EventTypeClick, rotationID)
+
+	return err
 }
 
 func (s *Storage) GetAllRotations(ctx context.Context) ([]types.Rotation, error) {

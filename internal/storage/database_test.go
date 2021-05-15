@@ -29,14 +29,20 @@ func TestBanners(t *testing.T) {
 	if connectionString == "" {
 		t.Skipf("Skipping TestBanners as env var '%s' is not set", dbConnEnvVar)
 	}
-	defer store.CleanDB()
+	err := store.Connect()
+	require.NoError(t, err)
+	defer func() {
+		err := store.Close()
+		require.NoError(t, err, "failed to close db connection")
+	}()
+
+	defer func() {
+		err := store.CleanDB()
+		require.NoError(t, err, "failed to clean database after test")
+	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	err := store.Connect()
-	require.NoError(t, err)
-	defer store.Close()
 
 	banner := types.Banner{ID: uuid.New(), Description: "Some banner"}
 
@@ -62,14 +68,20 @@ func TestSlots(t *testing.T) {
 	if connectionString == "" {
 		t.Skipf("Skipping TestSlots as env var '%s' is not set", dbConnEnvVar)
 	}
-	defer store.CleanDB()
+	err := store.Connect()
+	require.NoError(t, err)
+	defer func() {
+		err := store.Close()
+		require.NoError(t, err, "failed to close db connection")
+	}()
+
+	defer func() {
+		err := store.CleanDB()
+		require.NoError(t, err, "failed to clean database after test")
+	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	err := store.Connect()
-	require.NoError(t, err)
-	defer store.Close()
 
 	slot := types.Slot{ID: uuid.New(), Description: "Main slot"}
 
@@ -95,14 +107,20 @@ func TestGroups(t *testing.T) {
 	if connectionString == "" {
 		t.Skipf("Skipping TestGroups as env var '%s' is not set", dbConnEnvVar)
 	}
-	defer store.CleanDB()
+	err := store.Connect()
+	require.NoError(t, err)
+	defer func() {
+		err := store.Close()
+		require.NoError(t, err, "failed to close db connection")
+	}()
+
+	defer func() {
+		err := store.CleanDB()
+		require.NoError(t, err, "failed to clean database after test")
+	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	err := store.Connect()
-	require.NoError(t, err)
-	defer store.Close()
 
 	group := types.Group{ID: uuid.New(), Description: "Teenagers"}
 
@@ -138,18 +156,24 @@ func createTestRotation(ctx context.Context, t *testing.T, r testRotationInfo) {
 	require.NoError(t, err)
 }
 
-func TestRotations(t *testing.T) {
+func TestRotations(t *testing.T) { //nolint:funlen
 	if connectionString == "" {
 		t.Skipf("Skipping TestRotations as env var '%s' is not set", dbConnEnvVar)
 	}
-	defer store.CleanDB()
+	err := store.Connect()
+	require.NoError(t, err)
+	defer func() {
+		err := store.Close()
+		require.NoError(t, err, "failed to close db connection")
+	}()
+
+	defer func() {
+		err := store.CleanDB()
+		require.NoError(t, err, "failed to clean database after test")
+	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	err := store.Connect()
-	require.NoError(t, err)
-	defer store.Close()
 
 	rotations := []testRotationInfo{
 		{
@@ -196,6 +220,31 @@ func TestRotations(t *testing.T) {
 		shows, err := store.GetTotalShows(ctx)
 		require.NoError(t, err)
 		require.Equal(t, int64(len(rotations)*testShows), shows)
+	})
+
+	t.Run("check add clicks to rotation", func(t *testing.T) {
+		testClicks := 10
+		testRotation := rotations[0]
+
+		for i := 0; i < testClicks; i++ {
+			err := store.AddClick(
+				ctx,
+				testRotation.banner.ID,
+				testRotation.slot.ID,
+				testRotation.group.ID,
+			)
+			require.NoError(t, err)
+		}
+
+		rotation, err := store.GetRotation(
+			ctx,
+			testRotation.banner.ID,
+			testRotation.slot.ID,
+			testRotation.group.ID,
+		)
+		require.NoError(t, err)
+
+		require.Equal(t, testClicks, rotation.Clicks)
 	})
 
 	t.Run("check delete rotation1", func(t *testing.T) {

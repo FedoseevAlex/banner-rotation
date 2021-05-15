@@ -26,6 +26,30 @@ This is a final project for course OTUS Golang Professional
     - [ ] Написаны тесты на приложение
     - [ ] Написаны тесты на http сервер
 - [ ] Подумать как можно добавить временной разрез для shows/clicks.
+    Можно добавить таблицу, в которой будут храниться timestamps для rotations с типом события:
+    Название: event_timestamps
+    | column        | type                      | modifiers     |
+    |---------------|---------------------------|---------------|
+    |rotation_id    | serial                    | primary key   |
+    |stamp          | timestamp without timezone| not null      |
+    |event_type     | text                      | not null      |
+
+    Для добавления такой таблицы нужно будет изменить таблицу rotations:
+    | column     | type                        | modifiers      |
+    |------------|-----------------------------|----------------|
+    | id         | serial                      |  primary key   |
+    | banner_id  | uuid                        |  not null      |
+    | slot_id    | uuid                        |  not null      |
+    | group_id   | uuid                        |  not null      |
+    | shows      | integer                     |                |
+    | clicks     | integer                     |                |
+    | deleted    | boolean                     |  default false |
+    | deleted_at | timestamp without time zone |                |
+
+    Так как в rotations был составной primary key (banner_id, slot_id, group_id), то при введении поля id нужно будет
+    добавить unique constraint на (banner_id, slot_id, group_id).
+    Можно еще добавить индекс для полей (banner_id, slot_id, group_id), но это может быть избыточно сейчас. Плюс, его можно будет просто добавить позже.
+
 - [ ] Посмотреть какой еще алгоритм ротации можно добавить.
 - [ ] Реализована отправка статистики в очередь
 - [ ] Написаны интеграционные тесты

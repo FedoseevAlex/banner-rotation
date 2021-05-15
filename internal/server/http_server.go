@@ -55,6 +55,10 @@ func NewServer(application types.Application, cfg config.Server) (*Server, error
 		server.registerClickHandler,
 		requestLogger,
 	))
+	mux.Handle("GET", "/group/:group_id/slots/:slot_id/banners/:banner_id/stats", loggingMiddleware(
+		server.getStatsHandler,
+		requestLogger,
+	))
 	mux.Handle("GET", "/group/:group_id/slots/:slot_id/banner", loggingMiddleware(
 		server.chooseBannerHandler,
 		requestLogger,
@@ -218,6 +222,58 @@ func (s *Server) registerClickHandler(w http.ResponseWriter, request *http.Reque
 	}
 
 	jsonResponse(w, http.StatusNoContent, nil)
+}
+
+func (s *Server) getStatsHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	bannerID, err := uuid.Parse(params.ByName("banner_id"))
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to parse banner uuid",
+			},
+		)
+		return
+	}
+
+	slotID, err := uuid.Parse(params.ByName("slot_id"))
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to parse slot uuid",
+			},
+		)
+		return
+	}
+
+	groupID, err := uuid.Parse(params.ByName("group_id"))
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to parse group uuid",
+			},
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(request.Context(), s.timeout)
+	defer cancel()
+
+	stats, err := s.app.GetStats(ctx, bannerID, slotID, groupID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse(w, http.StatusNoContent, stats)
 }
 
 func (s *Server) chooseBannerHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {

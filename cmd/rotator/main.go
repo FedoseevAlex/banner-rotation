@@ -14,7 +14,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	application := app.New(cfg)
+	application, err := app.New(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	srv, err := server.NewServer(application, cfg.Server)
 	if err != nil {
