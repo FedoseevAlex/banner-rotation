@@ -39,58 +39,70 @@ func NewServer(application types.Application, cfg config.Server) (*Server, error
 	}
 	requestLogger := server.app.GetLogger("request info")
 
-	mux.Handle("POST", "/banners", loggingMiddleware(
+	// Banners
+	mux.Handle(http.MethodPost, "/banners", loggingMiddleware(
 		server.addBannerHandler,
 		requestLogger,
 	))
-	mux.Handle("DELETE", "/banners/:banner_id", loggingMiddleware(
+	mux.Handle(http.MethodDelete, "/banners/:banner_id", loggingMiddleware(
 		server.deleteBannerHandler,
 		requestLogger,
 	))
-	mux.Handle("GET", "/banners/:banner_id", loggingMiddleware(
+	mux.Handle(http.MethodGet, "/banners/:banner_id", loggingMiddleware(
 		server.getBannerHandler,
 		requestLogger,
 	))
 
-	mux.Handle("POST", "/slots", loggingMiddleware(
+	// Slots
+	mux.Handle(http.MethodPost, "/slots", loggingMiddleware(
 		server.addSlotHandler,
 		requestLogger,
 	))
-	mux.Handle("DELETE", "/slots/:slot_id", loggingMiddleware(
+	mux.Handle(http.MethodDelete, "/slots/:slot_id", loggingMiddleware(
 		server.deleteSlotHandler,
 		requestLogger,
 	))
-	mux.Handle("GET", "/slots/:slot_id", loggingMiddleware(
+	mux.Handle(http.MethodGet, "/slots/:slot_id", loggingMiddleware(
 		server.getSlotHandler,
 		requestLogger,
 	))
 
-	mux.Handle("POST", "/groups", loggingMiddleware(
+	// Groups
+	mux.Handle(http.MethodPost, "/groups", loggingMiddleware(
 		server.addGroupHandler,
 		requestLogger,
 	))
-	mux.Handle("DELETE", "/groups/:group_id", loggingMiddleware(
+	mux.Handle(http.MethodDelete, "/groups/:group_id", loggingMiddleware(
 		server.deleteGroupHandler,
 		requestLogger,
 	))
-	mux.Handle("GET", "/groups/:group_id", loggingMiddleware(
+	mux.Handle(http.MethodGet, "/groups/:group_id", loggingMiddleware(
 		server.getGroupHandler,
 		requestLogger,
 	))
 
-	mux.Handle("POST", "/group/:group_id/slots/:slot_id/banners/:banner_id/click", loggingMiddleware(
+	// Rotations
+	mux.Handle(http.MethodPost, "/group/:group_id/slots/:slot_id/banners/:banner_id", loggingMiddleware(
+		server.addRotationHandler,
+		requestLogger,
+	))
+	mux.Handle(http.MethodDelete, "/group/:group_id/slots/:slot_id/banners/:banner_id", loggingMiddleware(
+		server.addRotationHandler,
+		requestLogger,
+	))
+	mux.Handle(http.MethodPost, "/group/:group_id/slots/:slot_id/banners/:banner_id/click", loggingMiddleware(
 		server.registerClickHandler,
 		requestLogger,
 	))
-	mux.Handle("GET", "/group/:group_id/slots/:slot_id/banners/:banner_id/stats", loggingMiddleware(
+	mux.Handle(http.MethodGet, "/group/:group_id/slots/:slot_id/banners/:banner_id/stats", loggingMiddleware(
 		server.getStatsHandler,
 		requestLogger,
 	))
-	mux.Handle("GET", "/group/:group_id/slots/:slot_id/banner", loggingMiddleware(
+	mux.Handle(http.MethodGet, "/group/:group_id/slots/:slot_id/banner", loggingMiddleware(
 		server.chooseBannerHandler,
 		requestLogger,
 	))
-	mux.Handle("GET", "/version", server.versionHandler)
+	mux.Handle(http.MethodGet, "/version", server.versionHandler)
 
 	return server, nil
 }
