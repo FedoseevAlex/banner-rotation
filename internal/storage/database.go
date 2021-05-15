@@ -49,7 +49,7 @@ func execTxQuery(tx *sql.Tx, query string, args ...interface{}) error {
 
 // This method is to be used for tests only.
 func (s *Storage) CleanDB() error {
-	cleanEventTimestamps := `DELETE FROM event_timestamps`
+	cleanEventTimestamps := `DELETE FROM events`
 	_, err := s.db.Exec(cleanEventTimestamps)
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func (s *Storage) CleanDB() error {
 }
 
 func (s *Storage) AddEventTimestamp(ctx context.Context, eventType string, rotationID int) error {
-	query := ` INSERT INTO event_timestamps (rotation_id, stamp, event_type)
+	query := ` INSERT INTO events(rotation_id, stamp, event_type)
 	VALUES (:rotation_id, now(), :event_type)
 	`
 	eventStamp := event{
@@ -438,7 +438,7 @@ func (s *Storage) GetRotationStats(ctx context.Context, bannerID, slotID, groupI
 	var events []types.Event
 	for rows.Next() {
 		dbEvent := event{}
-		err := rows.Scan(&dbEvent)
+		err := rows.StructScan(&dbEvent)
 		if err != nil {
 			return nil, err
 		}

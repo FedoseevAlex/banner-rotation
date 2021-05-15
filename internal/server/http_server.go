@@ -526,7 +526,7 @@ func (s *Server) getStatsHandler(w http.ResponseWriter, request *http.Request, p
 		return
 	}
 
-	jsonResponse(w, http.StatusNoContent, stats)
+	jsonResponse(w, http.StatusOK, stats)
 }
 
 func (s *Server) chooseBannerHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
