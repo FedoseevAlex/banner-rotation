@@ -23,12 +23,11 @@ type Group struct {
 }
 
 type Rotation struct {
-	RotationID int
-	BannerID   uuid.UUID
-	SlotID     uuid.UUID
-	GroupID    uuid.UUID
-	Shows      int
-	Clicks     int
+	BannerID uuid.UUID
+	SlotID   uuid.UUID
+	GroupID  uuid.UUID
+	Shows    int
+	Clicks   int
 }
 
 type Event struct {
@@ -52,9 +51,10 @@ type Storager interface {
 	GetGroup(ctx context.Context, groupID uuid.UUID) (Group, error)
 	DeleteGroup(ctx context.Context, groupID uuid.UUID) error
 	// Rotation operations
-	AddRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
+	AddRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (Rotation, error)
 	DeleteRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
 	GetRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (Rotation, error)
+
 	AddShow(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
 	AddClick(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
 	GetAllRotations(ctx context.Context) ([]Rotation, error)
@@ -92,6 +92,10 @@ type Application interface {
 	AddGroup(ctx context.Context, description string) (Group, error)
 	DeleteGroup(ctx context.Context, groupID uuid.UUID) error
 	GetGroup(ctx context.Context, groupID uuid.UUID) (Group, error)
+
+	AddRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (Rotation, error)
+	DeleteRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
+	GetRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (Rotation, error)
 
 	RegisterClick(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error
 	GetStats(ctx context.Context, bannerID, slotID, groupID uuid.UUID) ([]Event, error)

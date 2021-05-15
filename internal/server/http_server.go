@@ -360,6 +360,59 @@ func (s *Server) getGroupHandler(w http.ResponseWriter, request *http.Request, p
 	jsonResponse(w, http.StatusOK, group)
 }
 
+// Rotation handlers.
+func (s *Server) addRotationHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	bannerID, err := uuid.Parse(params.ByName("banner_id"))
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to parse banner uuid",
+			},
+		)
+		return
+	}
+
+	slotID, err := uuid.Parse(params.ByName("slot_id"))
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to parse slot uuid",
+			},
+		)
+		return
+	}
+
+	groupID, err := uuid.Parse(params.ByName("group_id"))
+	if err != nil {
+		jsonResponse(
+			w,
+			http.StatusBadRequest,
+			BadRequestResponse{
+				Error: err.Error(),
+				Msg:   "failed to parse group uuid",
+			},
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(request.Context(), s.timeout)
+	defer cancel()
+
+	rotation, err := s.app.AddRotation(ctx, bannerID, slotID, groupID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, rotation)
+}
+
 func (s *Server) registerClickHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
 	bannerID, err := uuid.Parse(params.ByName("banner_id"))
 	if err != nil {

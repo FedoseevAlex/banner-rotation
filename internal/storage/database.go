@@ -342,7 +342,7 @@ func (s *Storage) DeleteGroup(ctx context.Context, groupID uuid.UUID) error {
 	return tx.Commit()
 }
 
-func (s *Storage) AddRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error {
+func (s *Storage) AddRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (types.Rotation, error) {
 	insertRotationQuery := `
 	INSERT INTO rotations (banner_id, slot_id, group_id, shows, clicks)
 	VALUES (:banner_id, :slot_id, :group_id, :shows, :clicks);
@@ -353,7 +353,14 @@ func (s *Storage) AddRotation(ctx context.Context, bannerID, slotID, groupID uui
 		GroupID:  groupID,
 	}
 	_, err := s.db.NamedExecContext(ctx, insertRotationQuery, rotation)
-	return err
+
+	resultRotation := types.Rotation{
+		BannerID: rotation.BannerID,
+		SlotID:   rotation.SlotID,
+		GroupID:  rotation.GroupID,
+	}
+
+	return resultRotation, err
 }
 
 func (s *Storage) DeleteRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error {

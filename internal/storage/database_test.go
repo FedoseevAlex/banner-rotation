@@ -152,7 +152,7 @@ func createTestRotation(ctx context.Context, t *testing.T, r testRotationInfo) {
 	err = store.AddGroup(ctx, r.group)
 	require.NoError(t, err)
 
-	err = store.AddRotation(ctx, r.banner.ID, r.slot.ID, r.group.ID)
+	_, err = store.AddRotation(ctx, r.banner.ID, r.slot.ID, r.group.ID)
 	require.NoError(t, err)
 }
 

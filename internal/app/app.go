@@ -27,6 +27,10 @@ func New(config config.Config) (*App, error) {
 	}
 
 	rotator := &mab.MultiArmedBandit{}
+	log.Debug(
+		"Application created successfully",
+		types.LogFields{},
+	)
 	return &App{Rotator: rotator, Storage: store, Log: log}, nil
 }
 
@@ -208,6 +212,57 @@ func (a *App) GetGroup(ctx context.Context, groupID uuid.UUID) (types.Group, err
 		return types.Group{}, err
 	}
 	return group, nil
+}
+
+func (a *App) AddRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (types.Rotation, error) {
+	rotation, err := a.Storage.AddRotation(ctx, bannerID, slotID, groupID)
+	if err != nil {
+		a.Log.Error(
+			"failed to add new rotation",
+			types.LogFields{
+				"error":     err,
+				"banner_id": bannerID.String(),
+				"slot_id":   slotID.String(),
+				"group_id":  groupID.String(),
+			},
+		)
+		return types.Rotation{}, err
+	}
+	return rotation, nil
+}
+
+func (a *App) GetRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) (types.Rotation, error) {
+	rotation, err := a.Storage.GetRotation(ctx, bannerID, slotID, groupID)
+	if err != nil {
+		a.Log.Error(
+			"failed to get rotation",
+			types.LogFields{
+				"error":     err,
+				"banner_id": bannerID.String(),
+				"slot_id":   slotID.String(),
+				"group_id":  groupID.String(),
+			},
+		)
+		return types.Rotation{}, err
+	}
+	return rotation, nil
+}
+
+func (a *App) DeleteRotation(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error {
+	err := a.Storage.DeleteRotation(ctx, bannerID, slotID, groupID)
+	if err != nil {
+		a.Log.Error(
+			"failed to delete rotation",
+			types.LogFields{
+				"error":     err,
+				"banner_id": bannerID.String(),
+				"slot_id":   slotID.String(),
+				"group_id":  groupID.String(),
+			},
+		)
+		return err
+	}
+	return nil
 }
 
 func (a *App) RegisterClick(ctx context.Context, bannerID, slotID, groupID uuid.UUID) error {
