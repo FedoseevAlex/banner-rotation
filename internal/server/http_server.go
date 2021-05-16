@@ -373,7 +373,7 @@ func (s *Server) getGroupHandler(w http.ResponseWriter, request *http.Request, p
 }
 
 // Rotation handlers.
-func (s *Server) addRotationHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (s *Server) addRotationHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) { //nolint:dupl
 	bannerID, err := uuid.Parse(params.ByName("banner_id"))
 	if err != nil {
 		jsonResponse(
@@ -477,7 +477,7 @@ func (s *Server) registerClickHandler(w http.ResponseWriter, request *http.Reque
 	jsonResponse(w, http.StatusNoContent, nil)
 }
 
-func (s *Server) getStatsHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) {
+func (s *Server) getStatsHandler(w http.ResponseWriter, request *http.Request, params httprouter.Params) { //nolint:dupl
 	bannerID, err := uuid.Parse(params.ByName("banner_id"))
 	if err != nil {
 		jsonResponse(

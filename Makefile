@@ -1,11 +1,14 @@
 BIN := "./bin/rotator"
 DOCKER_IMG="rotator:develop"
 
-GIT_HASH := $(shell git log --format="%h" -n 1)
-LDFLAGS := -X main.release="develop" -X main.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S) -X main.gitHash=$(GIT_HASH)
+PACKAGE_PATH := "github.com/FedoseevAlex/banner-rotation"
+GIT_HASH := $(shell git rev-parse HEAD)
+LDFLAGS := -X $(PACKAGE_PATH)/internal/common.release="develop"
+LDFLAGS += -X $(PACKAGE_PATH)/internal/common.buildDate=$(shell date -u +%Y-%m-%dT%H:%M:%S)
+LDFLAGS += -X $(PACKAGE_PATH)/internal/common.gitHash=$(GIT_HASH)
 
 build:
-	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/rotator
+	go build -v -o $(BIN) -ldflags "$(LDFLAGS)" ./cmd/...
 
 run: build
 	$(BIN) -config ./configs/config.toml
