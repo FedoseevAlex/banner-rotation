@@ -1,5 +1,6 @@
-BIN := "./bin/rotator"
-DOCKER_IMG="rotator:develop"
+BIN=bin/rotator.app
+DOCKER_IMG=rotator
+RELEASE=develop
 
 PACKAGE_PATH := "github.com/FedoseevAlex/banner-rotation"
 GIT_HASH := $(shell git rev-parse HEAD)
@@ -16,11 +17,15 @@ run: build
 build-img:
 	docker build \
 		--build-arg=LDFLAGS="$(LDFLAGS)" \
-		-t $(DOCKER_IMG) \
+		-t $(DOCKER_IMG):$(RELEASE) \
 		-f build/Dockerfile .
 
 run-img: build-img
-	docker run $(DOCKER_IMG)
+	docker rm $(DOCKER_IMG) || true
+	docker run \
+	--name $(DOCKER_IMG) \
+	-p 8080:8080 \
+	$(DOCKER_IMG):$(RELEASE)
 
 version: build
 	$(BIN) version
