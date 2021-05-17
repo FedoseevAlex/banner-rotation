@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 
 	"github.com/FedoseevAlex/banner-rotation/internal/app"
@@ -8,8 +9,16 @@ import (
 	"github.com/FedoseevAlex/banner-rotation/internal/server"
 )
 
+var configPath string
+
+func init() {
+	flag.StringVar(&configPath, "config", "", "Path to config file.")
+}
+
 func main() {
-	cfg, err := config.ReadConfig("./configs/config.toml")
+	flag.Parse()
+
+	cfg, err := config.ReadConfig(configPath)
 	if err != nil {
 		log.Fatal(err)
 	}
