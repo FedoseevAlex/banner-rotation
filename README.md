@@ -68,8 +68,29 @@ This is a final project for course OTUS Golang Professional
 
 Максимум 15 баллов, зачет от 10.
 
-## Примеры запросов
+## Пример запуска
+Для запуска понадобится контейнер с базой:
+```
+docker run --name rotator_db -p 5432:5432 -d -e POSTGRES_PASSWORD=123 postgres:latest
+```
 
+Затем создаем базу в postgres:
+```
+CREATE DATABASE bannerrotation
+```
+И накатываем миграцию:
+```
+cd migrations
+goose postgres "postgres://postgres:123@localhost:5432/bannerrotation?sslmode=disable" up
+```
+
+И стартуем приложение:
+```
+make run
+```
+После этого можно пробовать примеры запросов. 
+
+## Примеры запросов
 ### Версия приложения
 Получить информацию о работающей версии приложения.  
 URL: `/version`  
@@ -232,3 +253,4 @@ Content-Length: 410
 
 [{"Type":"show","Timestamp":"2021-05-16T19:23:31.727697Z"},{"Type":"show","Timestamp":"2021-05-16T19:23:35.14956Z"},{"Type":"show","Timestamp":"2021-05-16T19:24:46.918126Z"},{"Type":"click","Timestamp":"2021-05-16T19:26:55.950379Z"},{"Type":"click","Timestamp":"2021-05-16T19:27:11.941678Z"},{"Type":"click","Timestamp":"2021-05-16T19:27:17.765968Z"},{"Type":"click","Timestamp":"2021-05-16T19:27:31.827802Z"}]
 ```
+
